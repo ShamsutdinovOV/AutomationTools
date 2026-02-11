@@ -1,0 +1,18 @@
+[Unit]
+Description=Hotel Service
+After=network-online.target
+
+
+[Service]
+Type=simple
+User=vagrant
+Environment="POSTGRES_HOST=127.0.0.1"
+Environment="POSTGRES_PORT=5432"
+Environment="POSTGRES_DB=hotels_db"
+Environment="POSTGRES_USER=postgres"
+Environment="POSTGRES_PASSWORD=postgres"
+ExecStart=/usr/bin/java -jar /home/vagrant/hotel-service/app.jar
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

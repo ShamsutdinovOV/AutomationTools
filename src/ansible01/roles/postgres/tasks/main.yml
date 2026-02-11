@@ -1,0 +1,67 @@
+---
+  - name: "update"
+    ansible.builtin.apt:
+      update_cache: true
+    become: yes
+
+  - name: "install postgres"
+    ansible.builtin.apt: "name={{ item }} state=latest"
+    with_items: 
+      - postgresql 
+    become: yes
+
+  - name: "install pip"
+    ansible.builtin.apt:
+      name: pip
+      state: present
+    become: yes
+
+  - name: "install psycopg2 pythhon"
+    ansible.builtin.pip:
+      name: psycopg2-binary
+      executable: pip3
+    become: yes
+
+  - name: "Install ACL"
+    ansible.builtin.apt: "name=acl state=present"
+
+  - name: "create user"
+    ansible.builtin.postgresql_user:
+      name: "vagrant"
+      password: "vagrant"
+    become: yes
+    become_user: postgres
+    become_method: su
+
+  - name: "create db"
+    ansible.builtin.postgresql_db: 
+      name: ansible_db
+      state: present
+    become: yes
+    become_user: postgres   
+
+  
+  - name: "create table"
+    become: yes
+    become_user: postgres
+    community.postgresql.postgresql_query:
+      login_db: "ansible_db"
+      query: |
+        CREATE TABLE "ansible_table" (
+        company TEXT
+        );
+
+
+  - name: "add lines in table"
+    become: yes
+    become_user: postgres
+    community.postgresql.postgresql_query:
+      login_db: "ansible_db"
+      query: |
+        INSERT INTO ansible_table (company) VALUES('APPLE');
+        INSERT INTO ansible_table (company) VALUES('VK');
+        INSERT INTO ansible_table (company) VALUES('SBER');
+
+
+
+  

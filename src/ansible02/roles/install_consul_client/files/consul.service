@@ -1,0 +1,15 @@
+[Unit]
+Description=Consul Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=consul
+ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d -log-file=/var/log/consul/consul.log
+KillSignal=SIGINT
+TimeStopSec=5
+Restart=on=failure
+
+[Install]
+WantedBy=multi-user.target

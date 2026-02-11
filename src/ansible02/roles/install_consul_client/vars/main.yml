@@ -1,0 +1,6 @@
+
+---
+owner: "consul"
+path_unit: "/etc/systemd/system/"
+path_packet: "/usr/local/lib/bin/"
+path: "/usr/local/bin/"

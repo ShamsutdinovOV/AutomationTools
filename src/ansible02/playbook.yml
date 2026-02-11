@@ -1,0 +1,24 @@
+---
+- hosts: consul_server
+  become: true
+  roles: 
+    - install_consul_server
+
+- hosts: db
+  become: true
+  roles: 
+    - install_db
+    - install_consul_client
+  vars_files:
+    - "/home/vagrant/ansible02/roles/install_hotels_service/vars/postgres_vars.yml"  
+
+- hosts: api
+  become: true
+  roles:
+    - install_hotels_service
+    - install_consul_client
+  vars_files:
+    - "/home/vagrant/ansible02/roles/install_hotels_service/vars/postgres_vars.yml"
+
+
+

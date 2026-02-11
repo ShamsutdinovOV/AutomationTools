@@ -1,0 +1,59 @@
+---
+- hosts: node01
+  tasks:
+    - name: "apt update"
+      ansible.builtin.apt:
+        update_cache: true
+      become: yes  
+
+    - name: "install docker"
+      ansible.builtin.apt:
+        name: "docker.io"
+        state: "latest"
+      become: yes
+
+    - name: "Build group docker"
+      ansible.builtin.group:
+        name: "docker"
+        state: present
+
+    - name: "add group docker"
+      ansible.builtin.user:
+        name: "{{ ansible_user_id }}"
+        groups: "docker"
+        append: yes
+      become: yes      
+
+    - name: "Start daemon docker"
+      ansible.builtin.service:
+        name: "docker"
+        state: started
+
+    - name: "Install curl"
+      ansible.builtin.apt:
+        name: curl
+        state: present
+      become: yes
+
+    - name: "Download latest docker-compose"
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64"
+        dest: "/usr/local/bin/docker-compose"
+        mode: "0755"
+      become: yes
+
+    - name: "copy compose.yml in node01"
+      ansible.builtin.copy:
+        src: "/home/vagrant/services/"
+        dest: "/home/vagrant/"
+        mode: "777"
+
+    - name: "run docker-compose build"
+      command: "docker-compose build"
+      args:
+        chdir: "/home/vagrant/services/"
+
+    - name: "up dc"
+      command: "docker-compose up -d"
+      args:
+        chdir: "/home/vagrant/services/"

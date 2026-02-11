@@ -1,0 +1,10 @@
+---
+    - name: "run docker-compose build"
+      command: "docker-compose build"
+      args:
+        chdir: "/home/vagrant/services/"
+
+    - name: "up dc"
+      command: "docker-compose up -d"
+      args:
+        chdir: "/home/vagrant/services/"

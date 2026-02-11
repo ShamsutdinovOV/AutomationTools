@@ -1,0 +1,11 @@
+---
+- hosts: node01
+  become: true
+  roles: 
+    - application
+
+- hosts: node02
+  become: true
+  roles: 
+    - apache
+    - postgres

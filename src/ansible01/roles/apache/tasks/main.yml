@@ -1,0 +1,28 @@
+---
+
+  - name: "update"
+    ansible.builtin.apt:
+      update_cache: true
+    become: yes
+
+  - name: "install apache"
+    ansible.builtin.apt:
+      name: "apache2"
+      state: latest
+    become: yes
+
+  - name: "Start Apache"
+    ansible.builtin.service:
+      name: "apache2"
+      state: started
+      enabled: yes
+
+  - name: "port Apache"
+    ansible.builtin.wait_for:
+      port: 80
+      host: "{{ ansible_host }}"
+
+      
+
+
+

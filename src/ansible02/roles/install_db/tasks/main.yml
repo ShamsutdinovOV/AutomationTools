@@ -1,0 +1,67 @@
+
+---
+
+- name: "update"
+  ansible.builtin.apt:
+    update_cache: true
+  become: yes
+
+- name: "install postgres"
+  ansible.builtin.apt:
+    name: postgresql
+    state: present
+  become: yes
+
+- name: "install pip"
+  ansible.builtin.apt:
+    name: pip
+    state: present
+
+- name: "psycopg install"
+  ansible.builtin.pip: 
+    name: psycopg2-binary
+    executable: pip3
+
+- name: "install ACL"
+  ansible.builtin.apt:
+    name: acl
+    state: present
+
+- name: set postgres user password
+  community.postgresql.postgresql_user:
+    name: postgres
+    password: postgres
+    encrypted: yes
+  become: yes
+  become_user: postgres
+
+- name: "config postgres server"
+  community.postgresql.postgresql_alter_system:
+    param: listen_addresses
+    value: "*"
+  become: yes
+  become_user: postgres
+
+
+# - name: "config pg_hba for connect api"
+#   community.postgresql.postgresql_pg_hba:
+#     dest: /etc/postgresql/14/main/pg_hba.conf
+#     contype: host
+#     databases: all
+#     users: all
+#     address: 0.0.0.0/0
+#     method: password
+#   become: yes
+
+- name: "restart service"
+  ansible.builtin.service:
+    name: postgresql
+    state: restarted
+  become: yes
+
+- name: "create db"
+  ansible.builtin.postgresql_db:
+    name: "hotels_db"
+    state: present
+  become: yes
+  become_user: postgres

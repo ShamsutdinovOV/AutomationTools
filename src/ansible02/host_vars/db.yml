@@ -1,0 +1,3 @@
+---
+SERVICE_NAME: postgres
+SERVICE_PORT: 5432

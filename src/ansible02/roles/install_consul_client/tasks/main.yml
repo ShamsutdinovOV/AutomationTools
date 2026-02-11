@@ -1,0 +1,115 @@
+
+---
+- name: "add user"
+  ansible.builtin.user:
+    name: "{{ owner }}"
+
+- name: "install update"
+  ansible.builtin.apt:
+    update_cache: yes
+  become: yes
+
+- name: "consul get"
+  ansible.builtin.get_url:
+    url: "https://byurrer.ru/2023/07/23/consul/files/consul_1.16.0_linux_amd64.zip"
+    dest: /tmp/consul.zip
+    force: no
+  become: yes
+
+- name: "install unzip"
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+  become: yes
+
+- name: "consul unzip"
+  ansible.builtin.unarchive:
+    src: /tmp/consul.zip
+    dest: "{{ path }}"
+    remote_src: true
+  become: yes
+
+- name: "add cfg dir consul"
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item }}" 
+    owner: consul
+    mode: "0755"
+    recurse: yes
+  loop:
+    - /etc/config.d
+    - /var/lib/consul
+    - /var/log/consul
+  become: yes
+
+- name: "chown in consul dir"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: consul
+    mode: "0755"
+    recurse: yes
+  loop: 
+    - /var/lib/consul
+    - /var/log/consul
+  become: yes
+
+
+
+- name: "copy .hcl"
+  ansible.builtin.copy:
+    src: /home/vagrant/consul01/consul_client.hcl
+    dest: /etc/consul.d/
+    owner: consul
+    mode: "0755"
+    
+
+- name: "copy unit-files in node"
+  ansible.builtin.copy:
+    src: "{{ owner }}.service"
+    dest: "{{path_unit}}"
+
+- name: "download Envoy"
+  ansible.builtin.get_url:
+    url: "https://github.com/envoyproxy/envoy/releases/download/v1.26.6/envoy-1.26.6-linux-x86_64"
+    dest: /tmp/envoy
+    mode: "0755"
+    force: no
+  become: yes
+
+- name: "mv envoy"
+  ansible.builtin.command: mv /tmp/envoy "{{ path }}"
+  become: yes
+
+- name: "Transform EnvoyService.j2 in unit"
+  ansible.builtin.template:
+    src: "envoy.service.j2"
+    dest: "{{path_unit}}envoy.service"
+
+- name: "daemon reload"
+  ansible.builtin.systemd: 
+    daemon_reload: true
+
+- name: "enable services"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+  loop:
+    - "{{ owner }}.service"
+    - envoy.service 
+  become: yes 
+
+- name: "start services"
+  ansible.builtin.systemd:
+    state: started
+    name: "{{ item }}"
+  loop:
+    - envoy
+    - "{{ owner }}"
+
+- name: "Transform J2 in HCL"
+  ansible.builtin.template:
+    src: "consul_envoy.hcl.j2"
+    dest: "/etc/consul.d/consul_envoy.hcl"
+     
+      
+

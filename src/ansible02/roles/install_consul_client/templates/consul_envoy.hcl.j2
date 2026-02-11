@@ -1,0 +1,15 @@
+service = {
+    name = {{ SERVICE_NAME }}
+    port = {{ SERVICE_PORT }}
+    tags = [ "master" ]
+    connect {
+        sidecar_service {
+            proxy {
+                upstreams {
+                    destination_name = "postgres"
+                    local_bind_port = 5432
+                }
+            }
+        }
+    }
+}

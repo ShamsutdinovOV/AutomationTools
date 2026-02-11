@@ -1,0 +1,15 @@
+[Unit]
+Description=Envoy
+Requires=consul.service
+After=consul.service
+Wants=network-online.target
+
+
+[Service]
+Type=simple
+User=consul
+ExecStart=/usr/local/bin/consul connect envoy -sidecar-for={{ SERVICE_NAME }}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

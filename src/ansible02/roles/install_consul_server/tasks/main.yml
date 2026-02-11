@@ -1,0 +1,72 @@
+
+---
+- name: "add user"
+  ansible.builtin.user:
+    name: "{{ owner }}"
+
+- name: "install update"
+  ansible.builtin.apt:
+    update_cache: yes
+  become: yes
+
+- name: "install unzip"
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+  become: yes
+
+- name: "consul get"
+  ansible.builtin.get_url:
+    url: "https://byurrer.ru/2023/07/23/consul/files/consul_1.16.0_linux_amd64.zip"
+    dest: /tmp/consul.zip
+    force: no
+  become: yes
+
+- name: "consul unzip"
+  ansible.builtin.unarchive:
+    src: /tmp/consul.zip
+    dest: "{{ path }}"
+    remote_src: true
+  become: yes
+
+- name: "chown at consul"
+  ansible.builtin.file:
+    path: "{{ path }}consul"
+    owner: "{{ owner }}"
+    mode: "0755"
+  become: yes
+
+
+- name: "create dir consul"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory 
+    mode: 0777
+  loop:
+    - "/var/lib/consul" #хранилище данных consul
+    - "/var/log/consul" #логи consul
+    - "/etc/consul.d" #конфигурация
+
+- name: "copy consul cfg"
+  ansible.builtin.copy:
+    src: "/home/vagrant/consul01/consul_server.hcl"
+    dest: "/etc/consul.d/"
+
+- name: "copy unit-files in node"
+  ansible.builtin.copy:
+    src: "consul.service"
+    dest: "/usr/lib/systemd/system/"
+
+- name: "daemon reload"
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    
+
+- name: "start services"
+  ansible.builtin.systemd:
+    state: started
+    name: "{{ owner }}"
+    enabled: yes
+
+
+

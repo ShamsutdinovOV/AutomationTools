@@ -1,0 +1,7 @@
+#SPDX-License-Identifier: MIT-0
+---
+POSTGRES_HOST: "127.0.0.1"
+POSTGRES_PORT: 5432
+POSTGRES_DB: "hotels_db"
+POSTGRES_USER: postgres
+POSTGRES_PASSWORD: postgres

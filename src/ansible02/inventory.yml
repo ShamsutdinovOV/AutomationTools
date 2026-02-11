@@ -1,0 +1,13 @@
+---
+all:
+  hosts:
+    consul_server:
+      ansible_ssh_host: 192.168.34.10
+      ansible_user: vagrant 
+    api: 
+      ansible_ssh_host: 192.168.34.30
+      ansible_user: vagrant 
+    db:
+      ansible_ssh_host: 192.168.34.20 
+      ansible_user: vagrant 
+      

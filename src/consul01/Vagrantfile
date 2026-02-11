@@ -1,0 +1,76 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+def add_key(machine)  
+    machine.vm.provision "shell", inline: <<-SHELL
+    cp /home/vagrant/shared/id_rsa.pub /home/vagrant/.ssh/
+    sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa.pub
+    chmod 0644 /home/vagrant/.ssh/id_rsa.pub
+    sudo chmod 0600 /home/vagrant/.ssh/authorized_keys
+    cat /home/vagrant/shared/id_rsa.pub >> /home/vagrant/.ssh/authorized_keys
+  SHELL
+end
+
+
+Vagrant.configure("2") do |config|
+  config.vm.synced_folder "./shared", "/home/vagrant/shared"
+
+  config.vm.define "manager" do |manager|
+    manager.vm.provider "virtualbox" do |vm|
+      vm.gui = false
+      vm.memory = "2048"
+      vm.cpus = 2
+    end
+    manager.vm.box = "ubuntu/jammy64"
+    manager.vm.hostname = "manager"
+    manager.vm.network "public_network", ip: "192.168.34.40"
+    manager.vm.synced_folder "C:/DO8_AutomationTools.ID_1220167-1/src/consul01", "/home/vagrant/consul01", type:"rsync"
+    manager.vm.synced_folder "C:/DO8_AutomationTools.ID_1220167-1/src/ansible02", "/home/vagrant/ansible02", type:"rsync"
+    manager.vm.synced_folder "C:/DO8_AutomationTools.ID_1220167-1/src/services/hotel-service", "/home/vagrant/hotel-service", type:"rsync"
+    manager.vm.provision "shell", inline: <<-SHELL
+      sudo apt update
+      sudo apt install -y ansible
+      ansible-galaxy collection install -r /home/vagrant/ansible02/requirements.yml
+      sudo ssh-keygen -q -t rsa -f /home/vagrant/.ssh/id_rsa -N ""
+      sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa
+      sudo chown vagrant:vagrant /home/vagrant/.ssh/id_rsa.pub
+      chmod 0600 /home/vagrant/.ssh/id_rsa
+      chmod 0644 /home/vagrant/.ssh/id_rsa.pub
+      cp /home/vagrant/.ssh/id_rsa.pub /home/vagrant/shared
+    SHELL
+  end
+  
+  config.vm.define "consul_server" do |consul_server|
+    consul_server.vm.provider "virtualbox" do |vm|
+      vm.gui = false
+      vm.memory = "1024"
+    end
+    consul_server.vm.box = "ubuntu/jammy64"
+    consul_server.vm.hostname = "consulserver"
+    consul_server.vm.network "public_network", ip: "192.168.34.10"
+    consul_server.vm.network "forwarded_port", host: 8500, guest: 8500
+    add_key(consul_server)
+  end
+
+  config.vm.define "db" do |db|
+    db.vm.provider "virtualbox" do |vm|
+      vm.gui = false
+      vm.memory = "1024"
+    end
+    db.vm.box = "ubuntu/jammy64"
+    db.vm.hostname = "db"
+    db.vm.network "public_network", ip: "192.168.34.20"
+    add_key(db)
+  end
+  
+  config.vm.define "api" do |api|
+    api.vm.provider "virtualbox" do |vm|
+      vm.gui = false
+      vm.memory = "1024"
+    end
+    api.vm.box = "ubuntu/jammy64"
+    api.vm.hostname = "api"
+    api.vm.network "public_network", ip: "192.168.34.30"
+    api.vm.network "forwarded_port", host: 8082, guest: 8082
+    add_key(api)
+  end
+end

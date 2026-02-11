@@ -1,0 +1,73 @@
+#SPDX-License-Identifier: MIT-0
+---
+
+- name: "update cache"
+  ansible.builtin.apt:
+    update_cache: yes
+  become: yes
+
+- name: "copy hotel-service"
+  ansible.builtin.copy:
+    src: /home/vagrant/hotel-service
+    dest: /home/vagrant/
+    remote_src: false
+
+- name: "Set postgres environment"
+  ansible.builtin.lineinfile:
+    path: "/etc/environment"
+    line: "{{ item }}"
+    state: present
+  loop: 
+    - "POSTGRES_HOST={{ POSTGRES_HOST }}"
+    - "POSTGRES_PORT={{ POSTGRES_PORT }}"
+    - "POSTGRES_DB={{ POSTGRES_DB }}"
+    - "POSTGRES_USER={{ POSTGRES_USER }}"
+    - "POSTGRES_PASSWORD={{ POSTGRES_PASSWORD }}"
+
+- name: "install jdk"
+  ansible.builtin.apt:
+    name: openjdk-8-jdk
+    state: present
+  become: yes
+
+- name: "install maven"
+  ansible.builtin.shell: 
+    cmd: "apt install -y maven"
+  become: yes
+
+- name: "install dependesies"
+  ansible.builtin.shell: 
+    cmd: "mvn dependency:go-offline"
+    chdir: /home/vagrant/hotel-service
+
+
+- name: "package app"
+  ansible.builtin.shell: 
+    cmd: "mvn package -DskipTests"
+    chdir: /home/vagrant/hotel-service
+
+- name: "rename jar file"
+  ansible.builtin.shell: 
+    cmd: "mv ./target/*.jar app.jar"
+    chdir: /home/vagrant/hotel-service
+
+- name: "copy service file in api vm"
+  ansible.builtin.copy:
+    src: "hotel.service"
+    dest: "/usr/lib/systemd/system/"
+
+- name: "reload daemon"
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: "start service"
+  ansible.builtin.systemd:
+    state: started
+    name: hotel.service
+    enabled: yes
+
+
+
+
+  
+
